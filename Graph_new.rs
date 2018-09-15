@@ -227,28 +227,25 @@ where
 }
 
 
-use std::io::prelude::*;
 impl<Cost: Clone> AdjList<Cost> {
     fn vizualize(&self, name: &str) {
         let path = std::path::Path::new("tmp.dot");
         {
-            let mut file = std::fs::File::create(path).unwrap();
+            use std::io::{BufWriter, Write};
+
+            let file = std::fs::File::create(path).unwrap();
+            let mut out = BufWriter::new(file);
             let n = self.len();
-            file.write_all("digraph graph_name {\n".as_bytes()).unwrap();
+            writeln!(&mut out, "digraph graph_name {{").unwrap();
             for p in 0..n {
-                let s = ["    ".to_string(), p.to_string(), "[];\n".to_string()].connect("");
-                file.write_all(s.as_bytes()).unwrap();
+                writeln!(&mut out, "    {}[];",  p);
             }
             for p in 0..n {
                 for e in &self[p] {
-                    file.write_all(b"    ").unwrap();
-                    file.write_all(p.to_string().as_bytes()).unwrap();
-                    file.write_all(b" -> ").unwrap();
-                    file.write_all(e.to.to_string().as_bytes()).unwrap();
-                    file.write_all(b"\n").unwrap();
+                    writeln!(&mut out, "    {} -> {}", p, e.to);
                 }
             }
-            file.write(b"}\n").unwrap();
+            writeln!(&mut out, "}}");
         }
         let mut cmd = std::process::Command::new("dot");
         cmd.arg("-T");
@@ -256,6 +253,36 @@ impl<Cost: Clone> AdjList<Cost> {
         cmd.arg("tmp.dot");
         cmd.arg("-o");
         cmd.arg(name);
-        cmd.status().expect("commend failed to start");
+        cmd.status().expect("failed to execute dot");
+    }
+}
+
+impl<Cost: Clone + std::fmt::Display> AdjList<Cost> {
+    fn viz_with_cost(&self, name: &str) {
+        let path = std::path::Path::new("tmp.dot");
+        {
+            use std::io::{BufWriter, Write};
+
+            let file = std::fs::File::create(path).unwrap();
+            let mut out = BufWriter::new(file);
+            let n = self.len();
+            writeln!(&mut out, "digraph graph_name {{").unwrap();
+            for p in 0..n {
+                writeln!(&mut out, "    {}[];",  p);
+            }
+            for p in 0..n {
+                for e in &self[p] {
+                    writeln!(&mut out, "    {} -> {} [label={}]", p, e.to, e.cost);
+                }
+            }
+            writeln!(&mut out, "}}");
+        }
+        let mut cmd = std::process::Command::new("dot");
+        cmd.arg("-T");
+        cmd.arg("png");
+        cmd.arg("tmp.dot");
+        cmd.arg("-o");
+        cmd.arg(name);
+        cmd.status().expect("failed to execute dot");
     }
 }

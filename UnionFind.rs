@@ -1,4 +1,4 @@
-#[derive(Clone, Hash)]
+#[derive(Clone, Hash, Debug)]
 struct UnionFind {
     par: Vec<usize>,
     rank: Vec<usize>,

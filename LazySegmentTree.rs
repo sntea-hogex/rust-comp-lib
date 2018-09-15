@@ -1,3 +1,4 @@
+// 結構汚い
 trait Monoid {
     fn unity() -> Self;
     fn op(&self, &Self) -> Self;
